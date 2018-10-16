@@ -84,6 +84,7 @@
     <Compile Include="Model\PCPoints.cs" />
     <Compile Include="Model\Points.cs" />
     <Compile Include="Model\ScanPoints.cs" />
+    <Compile Include="Model\Surface.cs" />
     <Compile Include="ViewModel\ViemModelBase.cs" />
     <Compile Include="ViewModel\ViewModelMain.cs" />
     <Compile Include="View\MainWindow.xaml.cs">

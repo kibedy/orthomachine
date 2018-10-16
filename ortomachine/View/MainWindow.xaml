@@ -15,12 +15,12 @@
         <DockPanel>
             <Menu DockPanel.Dock="Top">
                 <MenuItem Header="_File">
-					<MenuItem Header="_Open"  Command="{Binding OpenMenuCommand}"/>
+                    <MenuItem Header="_Open"  Command="{Binding OpenMenuCommand}"/>
                     <MenuItem Header="_Close"/>
                     <MenuItem Header="_Save"/>
                 </MenuItem>
             </Menu>
-            <StackPanel></StackPanel>
+            <StackPanel/>
         </DockPanel>
     </Grid>
 </Window>

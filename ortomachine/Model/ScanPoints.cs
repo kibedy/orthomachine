@@ -17,13 +17,14 @@ namespace ortomachine.Model
         UInt16[,] surface;
         ushort xwidth;
         ushort yheight;
+        uint x0, y0, xmax, ymax, offset;    //offset: black border
+        float rastersize;
+        double Xmax, Zmax,  X0,  Z0;
 
 
-
-
-        public ScanPoints()
+        public ScanPoints(string filename)
         {
-            StreamReader sr = new StreamReader(path);
+            StreamReader sr = new StreamReader(filename);
             char[] delimiterChars = { ' ', ',', '\t' };
             //int filetype = 0;
             string line = sr.ReadLine();
@@ -32,7 +33,35 @@ namespace ortomachine.Model
 
             if (filetype == 3)
             {
-                Points point = new Points(double.Parse(numbers[0]), double.Parse(numbers[1]), double.Parse(numbers[2]));
+                double X = double.Parse(numbers[0],System.Globalization.CultureInfo.InvariantCulture);
+                double Y = double.Parse(numbers[1], System.Globalization.CultureInfo.InvariantCulture);
+                double Z = double.Parse(numbers[2], System.Globalization.CultureInfo.InvariantCulture);
+                //Points point = new Points(double.Parse(numbers[0]), double.Parse(numbers[1]), double.Parse(numbers[2]));
+                //Points point = new Points(654817.204,237975.415,111.783);
+                Points point = new Points(X,Y,Z);
+                PointList.AddFirst(point);
+
+                while (!sr.EndOfStream)
+                {
+                    line = sr.ReadLine();
+                    numbers= line.Split(delimiterChars);
+                    
+                    {
+                        point = new Points(
+                            double.Parse(numbers[0], System.Globalization.CultureInfo.InvariantCulture), 
+                            double.Parse(numbers[1], System.Globalization.CultureInfo.InvariantCulture), 
+                            double.Parse(numbers[2], System.Globalization.CultureInfo.InvariantCulture));
+                        PointList.AddLast(point);
+                    }
+                }
+            }
+            if (filetype == 4)      //intensity only
+            {
+                Points point = new Points(
+                    double.Parse(numbers[0], System.Globalization.CultureInfo.InvariantCulture), 
+                    double.Parse(numbers[1], System.Globalization.CultureInfo.InvariantCulture), 
+                    double.Parse(numbers[2], System.Globalization.CultureInfo.InvariantCulture), 
+                    int.Parse(numbers[3]));
                 PointList.AddFirst(point);
 
                 while (!sr.EndOfStream)
@@ -40,41 +69,130 @@ namespace ortomachine.Model
                     line = sr.ReadLine();
                     numbers = line.Split(delimiterChars);
                     {
-                        point = new Points(double.Parse(numbers[0]), double.Parse(numbers[1]), double.Parse(numbers[2]));
+                        point = new Points(
+                            double.Parse(numbers[0], System.Globalization.CultureInfo.InvariantCulture), 
+                            double.Parse(numbers[1], System.Globalization.CultureInfo.InvariantCulture), 
+                            double.Parse(numbers[2], System.Globalization.CultureInfo.InvariantCulture), 
+                            int.Parse(numbers[3]));
                         PointList.AddLast(point);
                     }
                 }
             }
 
-                       
+            if (filetype == 7)
+            {
+                Points point = new Points(
+                        double.Parse(numbers[0], System.Globalization.CultureInfo.InvariantCulture), 
+                        double.Parse(numbers[1], System.Globalization.CultureInfo.InvariantCulture), 
+                        double.Parse(numbers[2], System.Globalization.CultureInfo.InvariantCulture), 
+                        int.Parse(numbers[3]), 
+                        int.Parse(numbers[4]), 
+                        int.Parse(numbers[5]), 
+                        int.Parse(numbers[6]));
+                        
+                
+                PointList.AddFirst(point);
+
+                while (!sr.EndOfStream)
+                {
+                    line = sr.ReadLine();
+                    numbers = line.Split(delimiterChars);
+                    {
+                        point = new Points(
+                            double.Parse(numbers[0], System.Globalization.CultureInfo.InvariantCulture), 
+                            double.Parse(numbers[1], System.Globalization.CultureInfo.InvariantCulture), 
+                            double.Parse(numbers[2], System.Globalization.CultureInfo.InvariantCulture), 
+                            int.Parse(numbers[3]), 
+                            int.Parse(numbers[4]), 
+                            int.Parse(numbers[5]), 
+                            int.Parse(numbers[6]));
+                        PointList.AddLast(point);
+                    }
+                }
+            }
+            BoundingBox();
+            ;
+
         }
 
 
-        public void Surface(int x0, int y0, int xmax, int ymax, uint rastersize)
+        public void Surface(float rastersize, double offset)
         {
-            Points actual = PointList.First();
-            xwidth = (ushort)((xmax - x0) / rastersize);
-            yheight = (ushort)((ymax - y0) / rastersize);
+            //Points actual = PointList.First();
+            xwidth = (ushort)((((Xmax - X0) + 2 * offset) / rastersize)+1);
+            yheight = (ushort)((((Zmax - Z0) + 2 * offset) / rastersize)+1);
+            
             surface = new UInt16[xwidth, yheight];
-            double minZ = -99999999;
+            double minY = -99999999;
 
             foreach (Points item in PointList)
             {
-                uint i = (uint)(actual.X - x0) / rastersize;
-                uint j = (uint)(actual.Y - y0) / rastersize;
-                surface[i, j] = (ushort)(actual.Z * 1000);    //computing in mm
-                //if (minZ > actual.Z)
-                //    minZ = actual.Z;
+                uint i = (uint)(((item.X - X0) + offset) / rastersize);
+                uint j = (uint)(((item.Z - Z0) + offset) / rastersize);
+                if (item.Y>minY || surface[i,j]<item.Y)
+                {
+                    surface[i, j] = (ushort)(item.Z * 1000);    //computing in mm                
+                }
+                
             }
-           
+            ;
             
         }
 
+        public void BoundingBox()
+        {
+             Xmax = 0;  Zmax = 0;  X0 = 999999999;  Z0 = 999999999; //global coordinates
+            foreach (Points item in PointList)
+            {
+                if (item.X<X0)
+                {
+                    X0 = item.X;
+                }
+                if (item.X > Xmax)
+                {
+                    Xmax = item.X;
+                }
+                if (item.Z < Z0)
+                {
+                    Z0 = item.Z;
+                }
+                if (item.Z > Zmax)
+                {
+                    Zmax = item.Z;
+                }
+            }
+
+
+        }
 
         public void image()
         {
+            Bitmap image = new Bitmap(xwidth, yheight,PixelFormat.Format16bppGrayScale);
+
+            /*for (int x = 0; x < xwidth; x++)
+            {
+                for (int y = 0; y < yheight; y++)
+                {
+                    //Color pixelColor = surface[x, y];
+                    //Color newColor = Color.FromArgb()
+                    //image.SetPixel(x, y,co); // Now greyscale
+                }
+            }*/
+
+            
+
+
+            image.Save("surface.png",ImageFormat.Png); 
+
+            
+        }
+            
+
+        /*
+
             // Bitmap c = new Bitmap("fromFile");
             Bitmap d = new Bitmap("surface.png");
+            d.Size = new Size(xwidth, yheight);
             int x, y;
 
             // Loop through the images pixels to reset color.
@@ -89,7 +207,7 @@ namespace ortomachine.Model
             }
             //d = c;   // d is grayscale version of c  
             d.Save("surface.png", ImageFormat.Png);
-        }
+        }*/
 
     }
 }

@@ -13,8 +13,18 @@
             this.R = R;
             this.G = G;
             this.B = B;
+        }
+        public Points(double x, double y, double z, int R, int G, int B)
+        {
+            this.X = x;
+            this.Y = y;
+            this.Z = z;            
+            this.R = R;
+            this.G = G;
+            this.B = B;
 
         }
+
         public Points(double x, double y, double z)
         {
             this.X = x;
