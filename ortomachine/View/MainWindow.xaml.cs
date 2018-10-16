@@ -26,7 +26,7 @@ namespace ortomachine.ViewModel
         {
             ;
             InitializeComponent();
-            ScanPoints SP = new ScanPoints();
+           // ScanPoints SP = new ScanPoints();
             ;
             
         }
