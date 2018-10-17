@@ -6,7 +6,7 @@
         xmlns:vm="clr-namespace:ortomachine.ViewModel"        
         x:Class="ortomachine.ViewModel.MainWindow" WindowStartupLocation="CenterScreen"
         DataContext="{DynamicResource ViewModelMain}"
-        Title="MainWindow" Height="350" Width="525">
+        Title="MainWindow" Height="557.95" Width="637">
     <Window.Resources>
         <vm:ViewModelMain x:Key="ViewModelMain"/>
     </Window.Resources>
@@ -20,7 +20,9 @@
                     <MenuItem Header="_Save"/>
                 </MenuItem>
             </Menu>
-            <StackPanel/>
+            <StackPanel>
+                <Image x:Name="imagebox" Height="302" Width="515" Source="{Binding surface}"  />
+            </StackPanel>
         </DockPanel>
     </Grid>
 </Window>

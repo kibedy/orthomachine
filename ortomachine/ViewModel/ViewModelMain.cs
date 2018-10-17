@@ -10,6 +10,7 @@ using ortomachine.Helpers;
 using System.IO;
 using Microsoft.Win32;
 using ortomachine.Model;
+using System.Drawing;
 
 namespace ortomachine.ViewModel
 {
@@ -17,8 +18,15 @@ namespace ortomachine.ViewModel
     {
 
         public  RelayCommand OpenMenuCommand { get; set; }
+        public Bitmap Surface
+        {
+            get => surface;
+            set { surface = value; OnPropertyChanged("Surface"); }
+        }
+
         //public List<PCPoints> PointClod;
         public string filename;
+        private Bitmap surface;
 
         public ViewModelMain()
         {
@@ -30,8 +38,9 @@ namespace ortomachine.ViewModel
         public void OpenFile(object parameter)
         {           
             OpenFileDialog ofd = new OpenFileDialog();
-            ofd.Filter = "Point cloud (*.txt)|*.txt|ASCII file (*.asc)|*.asc";
             ofd.DefaultExt = ".asc";
+            ofd.Filter = "Point cloud (*.txt)|*.txt|ASCII file (*.asc)|*.asc";
+           
 
             Nullable<bool> result = ofd.ShowDialog();
             if (result == true)
@@ -39,6 +48,9 @@ namespace ortomachine.ViewModel
                 filename = ofd.FileName;
             }
             Surface sf = new Surface(filename);
+
+            Surface = sf.image;
+            
 
         }
 

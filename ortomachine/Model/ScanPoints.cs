@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -7,17 +8,22 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+//using Emgu.CV;
+//using Emgu.Util;
+//using Emgu.CV.Structure;
 
 namespace ortomachine.Model
 {
-    class ScanPoints
+    public class ScanPoints
     {
         LinkedList<Points> PointList =  new LinkedList<Points>();
         string path="";
         UInt16[,] surface;
         ushort xwidth;
         ushort yheight;
-        uint x0, y0, xmax, ymax, offset;    //offset: black border
+        uint offset;    //offset: black border
         float rastersize;
         double Xmax, Zmax,  X0,  Z0;
 
@@ -165,26 +171,79 @@ namespace ortomachine.Model
 
         }
 
-        public void image()
+        public Bitmap image()
         {
-            Bitmap image = new Bitmap(xwidth, yheight,PixelFormat.Format16bppGrayScale);
+            Bitmap image = new Bitmap(xwidth, yheight, System.Drawing.Imaging.PixelFormat.Format16bppGrayScale);
 
-            /*for (int x = 0; x < xwidth; x++)
+            var rect = new Rectangle(0, 0, xwidth, yheight);
+            BitmapData bitmapData = image.LockBits(rect, ImageLockMode.WriteOnly, image.PixelFormat);
+
+            //ushort a = 0;
+            unsafe
+            {
+                ushort* imagePointer = (ushort*)bitmapData.Scan0;
+                for (int y = 0; y < bitmapData.Height; y++)
+                {
+                    for (int x = 0; x < bitmapData.Width; x++)
+                    {                        
+                        imagePointer[0] = surface[x, y];
+                        imagePointer++;
+                    }
+                    imagePointer += bitmapData.Stride - bitmapData.Width*2;
+                }
+
+
+            }
+            image.UnlockBits(bitmapData);
+            //image.Save("surface.bmp", ImageFormat.Bmp);
+
+            BitmapSource source = BitmapSource.Create(image.Width,
+                                                  image.Height,
+                                                  image.HorizontalResolution,
+                                                  image.VerticalResolution,
+                                                  PixelFormats.Gray16,
+                                                  null,
+                                                  bitmapData.Scan0,
+                                                  bitmapData.Stride * image.Height,
+                                                  bitmapData.Stride);
+
+            FileStream stream = new FileStream("surface.bmp", FileMode.Create);
+            TiffBitmapEncoder encoder = new TiffBitmapEncoder();
+            encoder.Compression = TiffCompressOption.Zip;
+            encoder.Frames.Add(BitmapFrame.Create(source));
+            encoder.Save(stream);
+
+            Debug.WriteLine("saved");
+
+            return image;
+            /*
+            var numberOfBytes = bitmapData.Stride * yheight;
+            var bitmapBytes = new int[xwidth * yheight];
+            
+
+            for (int x = 0; x < xwidth; x++)
             {
                 for (int y = 0; y < yheight; y++)
                 {
+                    var i = ((y * xwidth) + x);
+                    bitmapBytes[i] = surface[x, y];
+
                     //Color pixelColor = surface[x, y];
                     //Color newColor = Color.FromArgb()
                     //image.SetPixel(x, y,co); // Now greyscale
                 }
-            }*/
+            }
 
+            var ptr = bitmapData.Scan0;
+            Marshal.Copy(, 0, ptr, numberOfBytes);
+            image.UnlockBits(bitmapData);
+
+            image.Save("surface.png",ImageFormat.Png);
+            Debug.WriteLine("saved");
+
+            return image;
             
-
-
-            image.Save("surface.png",ImageFormat.Png); 
-
-            
+            */
         }
             
 
