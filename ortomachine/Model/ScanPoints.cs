@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Emgu.CV;
+using Emgu.CV.Structure;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -173,49 +175,63 @@ namespace ortomachine.Model
 
         public Bitmap image()
         {
-            Bitmap image = new Bitmap(xwidth, yheight, System.Drawing.Imaging.PixelFormat.Format16bppGrayScale);
-
-            var rect = new Rectangle(0, 0, xwidth, yheight);
-            BitmapData bitmapData = image.LockBits(rect, ImageLockMode.WriteOnly, image.PixelFormat);
-
-            //ushort a = 0;
-            unsafe
+            Image<Gray, ushort> image = new Image<Gray, ushort>(xwidth, yheight);
+            for (int x = 0; x < xwidth; x++)
             {
-                ushort* imagePointer = (ushort*)bitmapData.Scan0;
-                for (int y = 0; y < bitmapData.Height; y++)
+                for (int y = 0; y < yheight; y++)
                 {
-                    for (int x = 0; x < bitmapData.Width; x++)
-                    {                        
-                        imagePointer[0] = surface[x, y];
-                        imagePointer++;
-                    }
-                    imagePointer += bitmapData.Stride - bitmapData.Width*2;
+                    image.Data[yheight-y-1, x, 0] = surface[x, y];
                 }
-
-
             }
-            image.UnlockBits(bitmapData);
-            //image.Save("surface.bmp", ImageFormat.Bmp);
+            image.Save("surface.png");
+            return image.ToBitmap();
 
-            BitmapSource source = BitmapSource.Create(image.Width,
-                                                  image.Height,
-                                                  image.HorizontalResolution,
-                                                  image.VerticalResolution,
-                                                  PixelFormats.Gray16,
-                                                  null,
-                                                  bitmapData.Scan0,
-                                                  bitmapData.Stride * image.Height,
-                                                  bitmapData.Stride);
+            /*
+             Bitmap image = new Bitmap(xwidth, yheight, System.Drawing.Imaging.PixelFormat.Format16bppGrayScale);
 
-            FileStream stream = new FileStream("surface.bmp", FileMode.Create);
-            TiffBitmapEncoder encoder = new TiffBitmapEncoder();
-            encoder.Compression = TiffCompressOption.Zip;
-            encoder.Frames.Add(BitmapFrame.Create(source));
-            encoder.Save(stream);
+             var rect = new Rectangle(0, 0, xwidth, yheight);
+             BitmapData bitmapData = image.LockBits(rect, ImageLockMode.WriteOnly, image.PixelFormat);
 
-            Debug.WriteLine("saved");
+             //ushort a = 0;
+             unsafe
+             {
+                 ushort* imagePointer = (ushort*)bitmapData.Scan0;
+                 for (int y = 0; y < bitmapData.Height; y++)
+                 {
+                     for (int x = 0; x < bitmapData.Width; x++)
+                     {                        
+                         imagePointer[0] = surface[x, y];
+                         imagePointer++;
+                     }
+                     imagePointer += bitmapData.Stride - bitmapData.Width*2;
+                 }
 
-            return image;
+
+             }
+             image.UnlockBits(bitmapData);
+             //image.Save("surface.bmp", ImageFormat.Bmp);
+
+             BitmapSource source = BitmapSource.Create(image.Width,
+                                                   image.Height,
+                                                   image.HorizontalResolution,
+                                                   image.VerticalResolution,
+                                                   PixelFormats.Gray16,
+                                                   null,
+                                                   bitmapData.Scan0,
+                                                   bitmapData.Stride * image.Height,
+                                                   bitmapData.Stride);
+
+             FileStream stream = new FileStream("surface.bmp", FileMode.Create);
+             TiffBitmapEncoder encoder = new TiffBitmapEncoder();
+             encoder.Compression = TiffCompressOption.Zip;
+             encoder.Frames.Add(BitmapFrame.Create(source));
+             encoder.Save(stream);
+
+             Debug.WriteLine("saved");
+
+             return image;
+             */
+
             /*
             var numberOfBytes = bitmapData.Stride * yheight;
             var bitmapBytes = new int[xwidth * yheight];
